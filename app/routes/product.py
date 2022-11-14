@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request, abort
 from werkzeug.utils import secure_filename
 from extensions import db, save_images
 from ..models.product import Products
-from ..schema.schema import product_schema
+from ..schema.schema import product_schema, product_schema_by_id
 
 bp_product = Blueprint('bp_product', __name__)
 
@@ -37,4 +37,13 @@ def create_product():
 def get_all_product():
     query_products = Products.query.all()
     result_products = product_schema.dump(query_products)
-    return result_products
+    return result_products, 200
+
+
+@bp_product.route('/read/<int:id_>')
+def get_product_id(id_):
+    query_product_by_id = Products.query.filter_by(id=id_).first()
+    if not query_product_by_id:
+        return jsonify({"message": "product not exist!"}), 404
+    result_product_by_id = product_schema_by_id.dump(query_product_by_id)
+    return result_product_by_id, 200
