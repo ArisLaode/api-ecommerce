@@ -5,7 +5,9 @@ from dotenv import load_dotenv
 from extensions import db, migrate
 from config import Config
 from app.models.product import Products
+from app.models.variant import Variants
 from app.routes.product import bp_product
+from app.routes.variant import bp_variant
 
 
 def create_app():
@@ -30,6 +32,7 @@ def create_app():
     migrate.init_app(app, db)
 
     app.register_blueprint(bp_product, url_prefix='/api/v1/products')
+    app.register_blueprint(bp_variant, url_prefix='/api/v1/variants')
 
     return app
 
