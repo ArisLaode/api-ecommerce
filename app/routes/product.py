@@ -1,14 +1,32 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request, abort
+from werkzeug.utils import secure_filename
+from extensions import db, save_images
+from ..models.product import Products
 
-product = Blueprint('product', __name__)
+bp_product = Blueprint('bp_product', __name__)
 
 
-@product.route('/product', methods=["GET"])
-def index():
-    result = {
-        'id': 1,
-        'name': 'apple',
-        'description': 'apple is technology product one of the best!'
+@bp_product.route('/create', methods=["post"])
+def create_product():
+    if not request.form:
+        abort(400, description="Resource not found")
+    images_product = request.files['images']
+    if images_product.filename == '':
+        return jsonify({"message": "images not found"}), 404
+    filename_images = secure_filename(images_product.filename)
 
-    }
-    return jsonify(result)
+    logo_product = request.files['logo']
+    if logo_product.filename == '':
+        return jsonify({"message": "logo not found"}), 404
+    filename_logo = secure_filename(logo_product.filename)
+    product = Products(
+        name=request.form['name'],
+        description=request.form['description'],
+        images=filename_images,
+        logo_id=filename_logo
+    )
+    save_images(images_product)
+    save_images(logo_product)
+    db.session.add(product)
+    db.session.commit()
+    return jsonify({"message": "create success"}), 201
