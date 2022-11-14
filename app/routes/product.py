@@ -2,11 +2,12 @@ from flask import Blueprint, jsonify, request, abort
 from werkzeug.utils import secure_filename
 from extensions import db, save_images
 from ..models.product import Products
+from ..schema.schema import product_schema
 
 bp_product = Blueprint('bp_product', __name__)
 
 
-@bp_product.route('/create', methods=["post"])
+@bp_product.route('/create', methods=["POST"])
 def create_product():
     if not request.form:
         abort(400, description="Resource not found")
@@ -30,3 +31,10 @@ def create_product():
     db.session.add(product)
     db.session.commit()
     return jsonify({"message": "create success"}), 201
+
+
+@bp_product.route('/read', methods=["GET"])
+def get_all_product():
+    query_products = Products.query.all()
+    result_products = product_schema.dump(query_products)
+    return result_products
