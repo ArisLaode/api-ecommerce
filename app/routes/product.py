@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, abort
+from flask import Blueprint, jsonify, request
 from werkzeug.utils import secure_filename
 from extensions import db, save_images
 from ..models.product import Products
@@ -9,20 +9,23 @@ bp_product = Blueprint('bp_product', __name__)
 
 @bp_product.route('/create', methods=["POST"])
 def create_product():
-    if not request.form:
-        abort(400, description="Resource not found")
+    name_product = request.form['name']
+    desc_product = request.form['description']
     images_product = request.files['images']
-    if images_product.filename == '':
-        return jsonify({"message": "images not found"}), 404
-    filename_images = secure_filename(images_product.filename)
-
     logo_product = request.files['logo']
-    if logo_product.filename == '':
+
+    if not name_product:
+        return jsonify({"message": "name not found"}), 404
+    elif not images_product:
+        return jsonify({"message": "images not found"}), 404
+    elif not logo_product:
         return jsonify({"message": "logo not found"}), 404
+
+    filename_images = secure_filename(images_product.filename)
     filename_logo = secure_filename(logo_product.filename)
     product = Products(
-        name=request.form['name'],
-        description=request.form['description'],
+        name=name_product,
+        description=desc_product,
         images=filename_images,
         logo_id=filename_logo
     )
@@ -30,7 +33,7 @@ def create_product():
     save_images(logo_product)
     db.session.add(product)
     db.session.commit()
-    return jsonify({"message": "create success"}), 201
+    return jsonify({"message": "create product success"}), 201
 
 
 @bp_product.route('/read', methods=["GET"])
@@ -47,3 +50,26 @@ def get_product_id(id_):
         return jsonify({"message": "product not exist!"}), 404
     result_product_by_id = product_schema_by_id.dump(query_product_by_id)
     return result_product_by_id, 200
+
+
+@bp_product.route('/update/<int:id_>', methods=["PUT"])
+def update_product(id_):
+    name_product = request.form['name']
+    desc_product = request.form['description']
+    images_product = request.files['images']
+    logo_product = request.files['logo']
+    query_product = Products.query.filter_by(id=id_).first()
+    if not query_product:
+        return jsonify({"message": "product not exist!"}), 404
+    elif not name_product:
+        return jsonify({"message": "name not found"}), 404
+    elif not images_product:
+        return jsonify({"message": "images not found"}), 404
+    elif not logo_product:
+        return jsonify({"message": "logo not found"}), 404
+    query_product.name = name_product
+    query_product.description = desc_product
+    query_product.images = images_product
+    query_product.logo = logo_product
+    db.session.commit()
+    jsonify({"message": "update product success"}), 200
