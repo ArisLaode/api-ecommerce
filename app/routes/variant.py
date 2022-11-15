@@ -62,6 +62,7 @@ def update_variant(id_):
     size_variant = request.form['size']
     color_variant = request.form['color']
     images_variant = request.files['images']
+    filename_images = secure_filename(images_variant.filename)
     query_variant = Variants.query.filter_by(id=id_).first()
     if not query_variant:
         return jsonify({"message": "variant not exist!"}), 404
@@ -69,6 +70,7 @@ def update_variant(id_):
     query_variant.name = name_variant,
     query_variant.size = size_variant,
     query_variant.color = color_variant,
-    query_variant.images = images_variant
+    query_variant.images = filename_images
+    save_images(images_variant)
     db.session.commit()
-    jsonify({"message": "update variant success"}), 200
+    return jsonify({"message": "update variant success"}), 200
