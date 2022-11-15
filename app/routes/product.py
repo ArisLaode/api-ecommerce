@@ -43,7 +43,7 @@ def get_all_product():
     return result_products, 200
 
 
-@bp_product.route('/read/<int:id_>')
+@bp_product.route('/read/<int:id_>', methods=["GET"])
 def get_product_id(id_):
     query_product_by_id = Products.query.filter_by(id=id_).first()
     if not query_product_by_id:
@@ -67,9 +67,13 @@ def update_product(id_):
         return jsonify({"message": "images not found"}), 404
     elif not logo_product:
         return jsonify({"message": "logo not found"}), 404
+    filename_images = secure_filename(images_product.filename)
+    filename_logo = secure_filename(logo_product.filename)
     query_product.name = name_product
     query_product.description = desc_product
-    query_product.images = images_product
-    query_product.logo = logo_product
+    query_product.images = filename_images
+    query_product.logo = filename_logo
+    save_images(images_product)
+    save_images(logo_product)
     db.session.commit()
-    jsonify({"message": "update product success"}), 200
+    return jsonify({"message": "update product success"}), 200
